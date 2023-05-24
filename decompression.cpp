@@ -3,10 +3,14 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <iterator>
+#include <sstream>
+#include <chrono>
 
 using namespace std;
 
 string reference_id;
+int reference_length;
 
 vector<int> reference_line_length;           //length of each line
 
@@ -17,6 +21,7 @@ string reference_extracted;               	//reference sequence once all is extr
 
 //to-be-decompressed genome id and vectors 
 string tbd_id;
+int tbd_length;
 
 vector<int> tbd_line_length;                 //length of each line
 
@@ -32,6 +37,10 @@ vector<int> tbd_other_length;                //length of N substring
 
 string tbd_extracted;                        //to-be-decompressed sequence once all is extracted
 
+string tbd_upper;
+
+string tbd_decompressed;                      //original 
+
 //tbd == to-be-decompressed from now on
 
 void reference_information_extraction(string seq_source) {
@@ -46,6 +55,7 @@ void reference_information_extraction(string seq_source) {
    bool found_first = false;
    int length = 0;
    string helpful_string1="";
+   reference_length=0;
 
    // extract reference lowercase information and make everything uppercase
    while(getline(givenFile,line)){
@@ -56,6 +66,7 @@ void reference_information_extraction(string seq_source) {
       }
       
       else{
+         reference_length+=line.length();
          reference_line_length.push_back(line.length());
          //for each character in a line
          for (int i = 0; i < line.length(); i++) {
@@ -107,16 +118,228 @@ void reference_information_extraction(string seq_source) {
    }
 }
 
+void u_to_l(){
+   string returned;
+   int counter_u=0;
+   int counter_l=0;
+   int last_l=0;
+   
+   //Boga pitaj kako ovo radi
+   while(returned.length()<tbd_length){
+      if((last_l+tbd_lowercase_pos[counter_l]>returned.length() || counter_l==tbd_lowercase_pos.size()) && counter_u<tbd_length){
+         returned+=tbd_upper[counter_u];
+         counter_u++;
+      }
+      else if (last_l+tbd_lowercase_pos[counter_l]==returned.length() && counter_l<tbd_lowercase_pos.size())
+      {
+         last_l=returned.length()+tbd_lowercase_length[counter_l];
+         for(int i=0;i<tbd_lowercase_length[counter_l];i++){
+            returned+=tolower(tbd_upper[counter_u]);
+            counter_u++;
+         }
+         counter_l++;
+      }
+      else{
+         cout<<"Something went wrong during returning.";
+         cout<<returned;
+         cout<<"\n";
+         exit(-1);
+      }
+      //cout<<"Test returned: "+returned+"\n";
+   }
+   
+   tbd_decompressed=returned;
+   
+}
+
+
+void n_spec_returned(){
+   //RELATIVNE UDALJENOSTI!!!!
+   string returned;
+   int counter_e=0;
+   int counter_n=0;
+   int last_n=0;
+   int counter_s=0;
+   int last_s=0;
+
+   //Boga pitaj kako ovo radi
+   while(returned.length()<tbd_length){
+      if((last_n+tbd_n_pos[counter_n]>returned.length() || counter_n==tbd_n_pos.size()) && (last_s+tbd_other_pos[counter_s]>returned.length() || counter_s==tbd_other_pos.size()) && counter_e<tbd_length){
+         returned+=tbd_extracted[counter_e];
+         counter_e++;
+      }
+      else if (last_n+tbd_n_pos[counter_n]==returned.length() && counter_n<tbd_n_pos.size())
+      {
+         last_n=returned.length()+tbd_n_length[counter_n];
+         for(int i=0;i<tbd_n_length[counter_n];i++){
+            returned+="N";
+         }
+         counter_n++;
+      }
+      else if (last_s+tbd_other_pos[counter_s]==returned.length() && counter_s<tbd_other_pos.size())
+      {
+         last_s=returned.length()+1;
+         returned+=(tbd_other_char[counter_s]+'A');
+         counter_s++;
+      }
+      else{
+         cout<<"Something went wrong during returning.";
+         cout<<returned;
+         cout<<"\n";
+         exit(-1);
+      }
+      //cout<<"Test returned: "+returned+"\n";
+   }
+   
+   tbd_upper=returned;
+}
+
+
+
+vector<int> rev_rle_int(vector<int> vec){
+   vector<int> normal;
+   int value;
+   int counter;
+   for(int i=0;i<vec.size();i+=2){
+      value=vec[i];   
+      counter=vec[i+1];
+      for(int j=0;j<counter;j++){
+         normal.push_back(value);
+      }
+   }
+   return normal;
+}
+
+vector<int> separate_pos(vector<int> vec){
+   vector<int> pos;
+
+   for(int i=0;i<vec.size();i+=2){
+      pos.push_back(vec[i]);
+   }
+
+   return pos;
+}
+
+vector<int> separate_len(vector<int> vec){
+   vector<int> len;
+
+   for(int i=1;i<vec.size();i+=2){
+      len.push_back(vec[i]);
+   }
+
+   return len;
+}
+
+
+vector<int> unpack(string line){
+   vector<int> numbers;
+   stringstream ss(line);
+
+   
+   string word;
+   vector<string> str_numbers;
+   while(ss>>word){
+      str_numbers.push_back(word);
+   }
+   
+   for(int i=0;i<str_numbers.size();i++){
+      numbers.push_back(stoi(str_numbers[i]));
+   }
+   return numbers;
+}
+
 void construct(string decompressed){
    string line;
    ifstream targetFile(decompressed);
    
-   string id="";
-   string lengths="";
-   string n_info="";
-   string spec_info="";
+   //string id="";
+   //string length="";
+   //vector<int> lengths;
+   vector<int> n_info;
+   vector<int> spec_info;
+   vector<int> lowercase_info;
 
 
+   
+   getline(targetFile,tbd_id);
+   getline(targetFile,line);
+   tbd_length=stoi(line);
+   getline(targetFile,line);
+   tbd_line_length=unpack(line);
+   tbd_line_length=rev_rle_int(tbd_line_length);
+   getline(targetFile,line);
+   n_info=unpack(line);
+   tbd_n_pos=separate_pos(n_info);
+   tbd_n_length= separate_len(n_info);
+   getline(targetFile,line);
+   spec_info=unpack(line);
+   tbd_other_pos=separate_pos(spec_info);
+   tbd_other_char= separate_len(spec_info);
+
+
+
+   //ZA SAD SAMO!!!!!!
+   getline(targetFile,line);
+   lowercase_info=unpack(line);
+   tbd_lowercase_pos=separate_pos(lowercase_info);
+   tbd_lowercase_length= separate_len(lowercase_info);
+
+   // std::cout<<tbd_id+"\n";
+   // std::cout<<tbd_length+"\n";
+   // std::cout<<"\nExtracted tbc:\n";
+   // for(char i:tbd_extracted){
+   //    std::cout<<i;
+   // }
+   // std::cout<<"\nLengths of lines:\n";
+   // for (int i:tbd_line_length)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nLowercase pos:\n";
+   // for (int i:tbd_lowercase_pos)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nLowercase lengths:\n";
+   // for (int i:tbd_lowercase_length)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nN pos:\n";
+   // for (int i:tbd_n_pos)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nN lengths:\n";
+   // for (int i:tbd_n_length)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nOther pos:\n";
+   // for (int i:tbd_other_pos)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nOther char:\n";
+   // for (int i:tbd_other_char)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+
+   n_spec_returned();
+
+}
+
+void write_down(){
+   ofstream myfile;
+	myfile.open("final_t.fa");
+   myfile << tbd_id << endl;
+   string leftover=tbd_decompressed;
+   for(int i=0;i<tbd_line_length.size();i++){
+      myfile<<leftover.substr(0,tbd_line_length[i])<<endl;
+      leftover=leftover.substr(tbd_line_length[i],leftover.size()-1);
+   }
+   myfile.close();
 
 }
 
@@ -136,18 +359,33 @@ int main(void){
    cin>>compressed_file;
 
    //decompress file
-   string command="7z e"+compressed_file;
-   system(command.c_str());
+   string command="7z e "+string(compressed_file);
+
+   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+   //IZ NEKOG RAZLOGA ODVRTI KOMANDU I ONDA SE UGASI
+   //system(command.c_str());
 
    //get decompressed file name
    string decompressed_file=compressed_file;
    decompressed_file.erase(compressed_file.length()-2);
-   //TXT ZA SAD!!!!!!!!!!!!!!
+
+   //ZA SAD!!!!!!!!!!!!!!
    decompressed_file+="txt";
+   tbd_extracted="AGCTGGGCCCTTAAGGTTTTTTCCCGGGAAATTTCCCTTTG";
 
    //start to construct the original genome
    construct(decompressed_file);
 
+   cout<<tbd_upper;
+
+   u_to_l();
+
+   cout<<tbd_decompressed;
+   write_down();
+   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+   std::cout << "\nTime difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+   
+  
 
 
 

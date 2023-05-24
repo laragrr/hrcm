@@ -54,10 +54,10 @@ string saveMatch(int pos, int length, string misMatch){
 }
 
 //saving information from First-level Matching
-string saveFirstMatch(vector<int> pos,vector<int> length,vector<string> misMatch){
+string saveFirstMatch(vector<tuple<int,int>> matching_segments,vector<string> misMatch){
    string output="";
-   for(int i=0;i<pos.size();i++){
-      output+=saveMatch(pos[i],length[i],misMatch[i]);
+   for(int i=0;i<matching_segments.size();i++){
+      output+=saveMatch(get<0>(matching_segments[i]),get<1>(matching_segments[i]),misMatch[i]);
    }
    output+="\n";
    return output;
