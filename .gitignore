@@ -1,0 +1,8 @@
+tbc0.txt
+tbc1.txt
+tbc2.txt
+tbc3.txt
+output.txt
+# Ignore files with extension `.class` & `.exe`
+*.class
+*.exe
