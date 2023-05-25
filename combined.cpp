@@ -3,11 +3,13 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <chrono>
 
 using namespace std;
 
 //reference genome id and vectors
 string reference_id;
+int reference_length;
 
 vector<int> reference_line_length;           //length of each line
 
@@ -26,6 +28,7 @@ string reference_extracted;               	//reference sequence once all is extr
 
 //to-be-compressed genome id and vectors 
 string tbc_id;
+int tbc_length;
 
 vector<int> tbc_line_length;                 //length of each line
 
@@ -56,6 +59,7 @@ void reference_information_extraction(string seq_source) {
    bool found_first = false;
    int length = 0;
    string helpful_string1="";
+   reference_length=0;
 
    // extract reference lowercase information and make everything uppercase
    while(getline(givenFile,line)){
@@ -66,6 +70,7 @@ void reference_information_extraction(string seq_source) {
       }
       
       else{
+         reference_length+=line.length();
          reference_line_length.push_back(line.length());
          //for each character in a line
          for (int i = 0; i < line.length(); i++) {
@@ -129,6 +134,7 @@ void tbc_information_extraction(string seq_source) {
    bool found_first = false;
    int length = 0;
    string helpful_string1="";
+   tbc_length=0;
 
    // extract tbc lowercase information and make everything uppercase
    while(getline(givenFile,line)){
@@ -139,6 +145,7 @@ void tbc_information_extraction(string seq_source) {
       }
       
       else{
+         tbc_length+=line.length();
          tbc_line_length.push_back(line.length());
          //for each character in a line
          for (int i = 0; i < line.length(); i++) {
@@ -255,6 +262,68 @@ void tbc_information_extraction(string seq_source) {
    tbc_extracted.erase(remove(tbc_extracted.begin(), tbc_extracted.end(), 'N'), tbc_extracted.end());    //remove N from tbc_extracted
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//for line lengths and other one vector informations
+string run_length_enc_int(vector<int> vec){
+   string out;
+   int counter=1;
+   int last=vec[0];
+   out+=to_string(vec[0]);
+   for(int i=1;i<vec.size();i++){
+      if(vec[i]==last){
+         counter++;
+      }else{
+         out+=" "+to_string(counter);
+         out+=" "+to_string(vec[i]);
+         last=vec[i];
+         counter=1;
+      }
+   }
+   out+=" "+to_string(counter)+"\n";
+   return out;
+}
+
+//je li zbilja potrebno???
+string run_length_enc_id(string ID){
+   string out;
+   
+   return out;
+}
+
+//can be used for lowercase(pos, length), n(pos,length) and special characters(pos, spec_char)
+string enc_length(vector<int> pos, vector<int> length){
+   string out;
+   for(int i=0;i<pos.size()-1;i++){
+      out+=to_string(pos[i])+" "+to_string(length[i])+" ";
+   }
+   out+=to_string(pos[pos.size()-1])+" "+to_string(length[pos.size()-1])+"\n"; 
+   return out;
+}
+
+
+//TUPLE RADI PROBLEME, PREUMORAN DA SKUŽIM ŠTO JE PROBLEM
+
+//saving mismatched information
+string saveMatch(tuple<int, int> matching_segment, string misMatch){
+   string output="";
+   if(!misMatch.empty()){
+      //razmisli još jednom o ovom formatu, najviše zbog zapisa i dekompresije
+      output+=to_string(get<0>(matching_segment))+" "+to_string(get<1>(matching_segment))+" "+misMatch+"\n";
+   }
+   return output;
+}
+
+//saving information from First-level Matching
+string saveFirstMatch(vector<tuple<int,int>> matching_segments,vector<string> misMatch){
+   string output="";
+   for(int i=0;i<matching_segments.size();i++){
+      std::tuple<int, int> holder=matching_segments[i];
+      output+=saveMatch(holder,misMatch[i]);
+   }
+   output+="\n";
+   return output;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
 
    string tbc_file;
@@ -267,25 +336,27 @@ int main(void) {
 
    tbc_information_extraction(tbc_file);
    reference_information_extraction(ref_file);
-   std::cout<<"Extracted ref:\n";
-   for(char i:reference_extracted){
-      std::cout<<i;
-   }
-   std::cout<<"\nLengths of lines:\n";
-   for (int i:reference_line_length)
-   {
-       std::cout<<i<<", ";
-   }
-   std::cout<<"\nLowercase pos:\n";
-   for (int i:reference_lowercase_pos)
-   {
-       std::cout<<i<<", ";
-   }
-   std::cout<<"\nLowercase lengths:\n";
-   for (int i:reference_lowercase_length)
-   {
-       std::cout<<i<<", ";
-   }
+   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+   // std::cout<<"Extracted ref:\n";
+   // for(char i:reference_extracted){
+   //    std::cout<<i;
+   // }
+   // std::cout<<"\nLengths of lines:\n";
+   // for (int i:reference_line_length)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nLowercase pos:\n";
+   // for (int i:reference_lowercase_pos)
+   // {
+   //     std::cout<<i<<", ";
+   // }
+   // std::cout<<"\nLowercase lengths:\n";
+   // for (int i:reference_lowercase_length)
+   // {
+   //     std::cout<<i<<", ";
+   // }
    std::cout<<"\nExtracted tbc:\n";
    for(char i:tbc_extracted){
       std::cout<<i;
@@ -331,5 +402,35 @@ int main(void) {
        std::cout<<i<<", ";
    }
    
+   //////////////////////////////////////////////////////////////////////////////////////////////
+   string id=tbc_id+"\n";
+   string length=to_string(tbc_length)+"\n";
+   
+    
+   //izbacio \n iz svih ispod, inače ima prazan red između. Želimo li to?
+   string line_lengths=run_length_enc_int(tbc_line_length);
+
+   string n_info=enc_length(tbc_n_pos,tbc_n_length);
+   string spec_info=enc_length(tbc_other_pos,tbc_other_char);
+
+   //ZA SAD KAO PROBA!!!!
+   string lowercase_info=enc_length(tbc_lowercase_pos,tbc_lowercase_length);
+
+   
+
+   ofstream outputfile;
+   outputfile.open("output.txt");
+   outputfile<<id;
+   outputfile<<length;
+   outputfile<<line_lengths;
+   outputfile<<n_info;
+   outputfile<<spec_info;
+   outputfile<<lowercase_info;
+
+   outputfile.close();
+   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+   std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+   system("7z a -m0=PPMd output.7a output.txt");
+
    return 0;
 }
