@@ -1,3 +1,5 @@
+// Written by Lara Grgurić
+
 #include <string>
 #include <vector>
 #include <iostream>
