@@ -145,9 +145,9 @@ void u_to_l(){
          counter_l++;
       }
       else{
-         cout<<"Something went wrong during returning.";
-         cout<<returned;
-         cout<<"\n";
+         std::cout<<"Something went wrong during returning.";
+         std::cout<<returned;
+         std::cout<<"\n";
          exit(-1);
       }
       //cout<<"Test returned: "+returned+"\n";
@@ -188,9 +188,9 @@ void n_spec_returned(){
          counter_s++;
       }
       else{
-         cout<<"Something went wrong during returning.";
-         cout<<returned;
-         cout<<"\n";
+         std::cout<<"Something went wrong during returning.";
+         std::cout<<returned;
+         std::cout<<"\n";
          exit(-1);
       }
       //cout<<"Test returned: "+returned+"\n";
@@ -271,7 +271,7 @@ void second_level_decompress(int &seq_id, int &pos, int &len, vector<vector<pair
 }
 
 // first level decompress
-string first_level_decompress(string &ref_seq, vector<vector<pair<int, int>>> &seq_match_results, vector<vector<string>> &seq_mism_chars, int seq_id) {
+string first_level_decompress(vector<vector<pair<int, int>>> &seq_match_results, vector<vector<string>> &seq_mism_chars, int seq_id) {
    //for (int seq_id = 0; seq_id < seq_match_results.size(); seq_id++) {
    string line = "";
 
@@ -279,7 +279,7 @@ string first_level_decompress(string &ref_seq, vector<vector<pair<int, int>>> &s
       auto [pos, len] = seq_match_results[seq_id][i];
       string mism_chars = seq_mism_chars[seq_id][i];
       for (int j = pos; j < pos+len; j++) {
-         line += ref_seq[j];
+         line += reference_extracted[j];
       }
       line += mism_chars;
    }
@@ -293,14 +293,8 @@ string first_level_decompress(string &ref_seq, vector<vector<pair<int, int>>> &s
    
 }
 
-//decoding
-void readingFile(int seq_id, string line) {
-   //ifstream myfile(path);
-   //string reference_seq;
-   //getline(myfile, reference_seq);
-
-   
-
+//decoding first and second level matching results
+string readingFile(int seq_id, string line) {
    //string tbc_first_level;
    //getline(myfile, tbc_first_level);
    vector<pair<int, int>> matching_segments_first_seq;
@@ -310,17 +304,18 @@ void readingFile(int seq_id, string line) {
    //getline(myfile, line);
 
    if (!seq_id) {
-      // reading first level matching result if 0th tbc sequence
+      // reading first level matching result of 0th tbc sequence
       std::istringstream iss(line);
       while ((iss >> a >> b >> c)) { 
          matching_segments_first_seq.push_back(make_pair(a,b));
          mismatched_chars_first_seq.push_back(c);
       }
    } else {
+      // reading second level matching result of other tbc sequences
       std::istringstream iss(line);
       while ((iss >> a >> b >> c)) { 
-         // getting first level matching results from second level
 
+         // getting first level matching results from second level
          if (isNumber(c)) {
             int len = stoi(c);
             second_level_decompress(a, b, len, seq_match_results, seq_mism_chars, matching_segments_first_seq, mismatched_chars_first_seq);
@@ -329,35 +324,41 @@ void readingFile(int seq_id, string line) {
             mismatched_chars_first_seq.push_back(c);
          }
       }
-      
-      // seq_match_results.push_back(matching_segments_first_seq);
-      // seq_mism_chars.push_back(mismatched_chars_first_seq);
    }
    
-   
-   
-
    seq_match_results.push_back(matching_segments_first_seq);
    seq_mism_chars.push_back(mismatched_chars_first_seq);
    
+   return first_level_decompress(seq_match_results, seq_mism_chars, seq_id);
+
 
    // reading second level matching results
    // while (getline(myfile, line)) {
    //    matching_segments_first_seq.clear();
    //    mismatched_chars_first_seq.clear();
-
-      
-   
-   // myfile.close();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void construct(string decompressed, int seq_id){
+void write_down(){
+   ofstream myfile;
+	myfile.open("final_t.fa");
+   myfile << tbd_id << endl;
+   string leftover=tbd_decompressed;
+   for(int i=0;i<tbd_line_length.size();i++){
+      myfile<<leftover.substr(0,tbd_line_length[i])<<endl;
+      leftover=leftover.substr(tbd_line_length[i],leftover.size()-1);
+   }
+   myfile.close();
+
+}
+
+void construct(string decompressed){
    string line;
    ifstream targetFile(decompressed);
-   
+   int seq_id = 0;
+   while (!targetFile.eof()) {
    //string id="";
    //string length="";
    //vector<int> lengths;
@@ -393,7 +394,7 @@ void construct(string decompressed, int seq_id){
    ////////////////////////////////////////////////////
    // Written by Lara Grgurić
    getline(targetFile, line);
-   first_level_decompress(reference_extracted, seq_match_results, seq_mism_chars, seq_id);
+   tbd_extracted = readingFile(seq_id, line);
 
    ////////////////////////////////////////////////////
 
@@ -442,22 +443,17 @@ void construct(string decompressed, int seq_id){
 
    n_spec_returned();
 
-}
+   std::cout<<tbd_upper << endl;
 
-void write_down(){
-   ofstream myfile;
-	myfile.open("final_t.fa");
-   myfile << tbd_id << endl;
-   string leftover=tbd_decompressed;
-   for(int i=0;i<tbd_line_length.size();i++){
-      myfile<<leftover.substr(0,tbd_line_length[i])<<endl;
-      leftover=leftover.substr(tbd_line_length[i],leftover.size()-1);
+   u_to_l();
+
+   std::cout<<tbd_decompressed << endl;
+   write_down();
+
+   seq_id++;
    }
-   myfile.close();
 
 }
-
-
 
 int main(void){
    
@@ -467,8 +463,8 @@ int main(void){
    //get reference genom file name
    cout<<"Please enter a reference genome file name: ";
    cin>>ref_file;
+   reference_information_extraction(ref_file);
 
-// napraviti za vise fileova
    //get compressed genom file name
    cout<<"Please enter the name of compressed genome file you wish to decompress: ";
    cin>>compressed_file;
@@ -486,17 +482,17 @@ int main(void){
 
    //ZA SAD!!!!!!!!!!!!!!
    decompressed_file+="txt";
-   tbd_extracted="AGCTGGGCCCTTAAGGTTTTTTCCCGGGAAATTTCCCTTTG";
+   //tbd_extracted="AGCTGGGCCCTTAAGGTTTTTTCCCGGGAAATTTCCCTTTG";
 
    //start to construct the original genome
-   construct(decompressed_file, i);
+   construct(decompressed_file);
 
-   cout<<tbd_upper;
+   // cout<<tbd_upper;
 
-   u_to_l();
+   // u_to_l();
 
-   cout<<tbd_decompressed;
-   write_down();
+   // cout<<tbd_decompressed;
+   // write_down();
    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
    std::cout << "\nTime difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
    
