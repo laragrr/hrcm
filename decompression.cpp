@@ -41,6 +41,11 @@ string tbd_upper;
 
 string tbd_decompressed;                      //original 
 
+// written by Lara Grgurić
+vector<vector<pair<int, int>>> seq_match_results;  // vector of match results for every sequence
+vector<vector<string>> seq_mism_chars;
+///////
+
 //tbd == to-be-decompressed from now on
 
 void reference_information_extraction(string seq_source) {
@@ -248,7 +253,108 @@ vector<int> unpack(string line){
    return numbers;
 }
 
-void construct(string decompressed){
+////////////////////////////////////////////////////////////////////////////////
+// written by Lara Grgurić
+
+// check if a string is a number
+bool isNumber(string str) {
+   return !str.empty() && find_if(str.begin(), str.end(), 
+   [](unsigned char c) { return !isdigit(c);}) == str.end();
+}
+
+// second level decompress
+void second_level_decompress(int &seq_id, int &pos, int &len, vector<vector<pair<int, int>>> &seq_match_results, vector<vector<string>> &seq_mism_chars, vector<pair<int, int>> &matching_segments_seq, vector<string> &mismatched_chars_seq) {
+   for (int i = pos; i < pos + len; i++) {
+      matching_segments_seq.push_back(seq_match_results[seq_id][i]);
+      mismatched_chars_seq.push_back(seq_mism_chars[seq_id][i]);
+   }
+}
+
+// first level decompress
+string first_level_decompress(string &ref_seq, vector<vector<pair<int, int>>> &seq_match_results, vector<vector<string>> &seq_mism_chars, int seq_id) {
+   //for (int seq_id = 0; seq_id < seq_match_results.size(); seq_id++) {
+   string line = "";
+
+   for (int i = 0; i < seq_match_results[seq_id].size(); i++) {
+      auto [pos, len] = seq_match_results[seq_id][i];
+      string mism_chars = seq_mism_chars[seq_id][i];
+      for (int j = pos; j < pos+len; j++) {
+         line += ref_seq[j];
+      }
+      line += mism_chars;
+   }
+
+   // ofstream newfile;
+   // string filename = "tbc" + to_string(seq_id) + ".txt";
+   // newfile.open(filename);
+   // newfile << line;
+   // newfile.close();
+   return line;
+   
+}
+
+//decoding
+void readingFile(int seq_id, string line) {
+   //ifstream myfile(path);
+   //string reference_seq;
+   //getline(myfile, reference_seq);
+
+   
+
+   //string tbc_first_level;
+   //getline(myfile, tbc_first_level);
+   vector<pair<int, int>> matching_segments_first_seq;
+   vector<string> mismatched_chars_first_seq;
+   int a, b;
+   string c;   
+   //getline(myfile, line);
+
+   if (!seq_id) {
+      // reading first level matching result if 0th tbc sequence
+      std::istringstream iss(line);
+      while ((iss >> a >> b >> c)) { 
+         matching_segments_first_seq.push_back(make_pair(a,b));
+         mismatched_chars_first_seq.push_back(c);
+      }
+   } else {
+      std::istringstream iss(line);
+      while ((iss >> a >> b >> c)) { 
+         // getting first level matching results from second level
+
+         if (isNumber(c)) {
+            int len = stoi(c);
+            second_level_decompress(a, b, len, seq_match_results, seq_mism_chars, matching_segments_first_seq, mismatched_chars_first_seq);
+         } else {
+            matching_segments_first_seq.push_back(make_pair(a,b));
+            mismatched_chars_first_seq.push_back(c);
+         }
+      }
+      
+      // seq_match_results.push_back(matching_segments_first_seq);
+      // seq_mism_chars.push_back(mismatched_chars_first_seq);
+   }
+   
+   
+   
+
+   seq_match_results.push_back(matching_segments_first_seq);
+   seq_mism_chars.push_back(mismatched_chars_first_seq);
+   
+
+   // reading second level matching results
+   // while (getline(myfile, line)) {
+   //    matching_segments_first_seq.clear();
+   //    mismatched_chars_first_seq.clear();
+
+      
+   
+   // myfile.close();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+void construct(string decompressed, int seq_id){
    string line;
    ifstream targetFile(decompressed);
    
@@ -283,6 +389,13 @@ void construct(string decompressed){
    lowercase_info=unpack(line);
    tbd_lowercase_pos=separate_pos(lowercase_info);
    tbd_lowercase_length= separate_len(lowercase_info);
+
+   ////////////////////////////////////////////////////
+   // Written by Lara Grgurić
+   getline(targetFile, line);
+   first_level_decompress(reference_extracted, seq_match_results, seq_mism_chars, seq_id);
+
+   ////////////////////////////////////////////////////
 
    // std::cout<<tbd_id+"\n";
    // std::cout<<tbd_length+"\n";
@@ -326,6 +439,7 @@ void construct(string decompressed){
    //     std::cout<<i<<", ";
    // }
 
+
    n_spec_returned();
 
 }
@@ -354,6 +468,7 @@ int main(void){
    cout<<"Please enter a reference genome file name: ";
    cin>>ref_file;
 
+// napraviti za vise fileova
    //get compressed genom file name
    cout<<"Please enter the name of compressed genome file you wish to decompress: ";
    cin>>compressed_file;
@@ -374,7 +489,7 @@ int main(void){
    tbd_extracted="AGCTGGGCCCTTAAGGTTTTTTCCCGGGAAATTTCCCTTTG";
 
    //start to construct the original genome
-   construct(decompressed_file);
+   construct(decompressed_file, i);
 
    cout<<tbd_upper;
 

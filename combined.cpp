@@ -139,6 +139,7 @@ string tbc_information_extraction(string seq_source, int seq_id) {
    int length = 0;
    string helpful_string1="";
    tbc_length_vec.push_back(0);
+   tbc_extracted = "";
 
    vector<int> temp_vec1;
    tbc_line_length_vec.push_back(temp_vec1);
@@ -488,8 +489,16 @@ void first_level_matching(string tbc_seq) {
          }
       }
    }
+   if (length != 0) {
+            // end of matching segment
+            // recording position and length     
+            matching_segments.push_back(make_pair(idx[0] - (length-k), length));
+            i += k-1;
+            length = 0;
+            idx.clear();
+   }
    string final = "";
-   for (--i; i < tbc_seq.length(); i++) {
+   for (i; i < tbc_seq.length(); i++) {
       final += tbc_seq[i];
    }
    mismatched_chars.push_back(final);
@@ -568,7 +577,7 @@ void saveToFile(int seq_id, string &match_result) {
    outputfile<<n_info;
    outputfile<<spec_info;
    outputfile<<lowercase_info;
-   outputfile<<match_result;
+   outputfile<<match_result<<endl;
 
    outputfile.close();
 }
@@ -626,7 +635,6 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
          //myfile << endl;
          saveToFile(j, match_result);
       }  
-
       matching_segments.clear();
       mismatched_chars.clear(); 
    }
@@ -669,101 +677,6 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
    //myfile.close();
 }
 
-// check if a string is a number
-bool isNumber(string str) {
-   return !str.empty() && find_if(str.begin(), str.end(), 
-   [](unsigned char c) { return !isdigit(c);}) == str.end();
-}
-
-// second level decompress
-void second_level_decompress(int &seq_id, int &pos, int &len, vector<vector<pair<int, int>>> &seq_match_results, vector<vector<string>> &seq_mism_chars, vector<pair<int, int>> &matching_segments_seq, vector<string> &mismatched_chars_seq) {
-   for (int i = pos; i < pos + len; i++) {
-      matching_segments_seq.push_back(seq_match_results[seq_id][i]);
-      mismatched_chars_seq.push_back(seq_mism_chars[seq_id][i]);
-   }
-}
-
-// first level decompress
-void first_level_decompress(string &ref_seq, vector<vector<pair<int, int>>> &seq_match_results, vector<vector<string>> &seq_mism_chars) {
-   for (int seq_id = 0; seq_id < seq_match_results.size(); seq_id++) {
-      string line = "";
-
-      for (int i = 0; i < seq_match_results[seq_id].size(); i++) {
-         auto [pos, len] = seq_match_results[seq_id][i];
-         string mism_chars = seq_mism_chars[seq_id][i];
-         for (int j = pos; j < pos+len; j++) {
-            line += ref_seq[j];
-         }
-         line += mism_chars;
-      }
-
-      ofstream newfile;
-      string filename = "tbc" + to_string(seq_id) + ".txt";
-      newfile.open(filename);
-      newfile << line;
-      newfile.close();
-   }
-}
-
-//decoding
-void readingFile(string path) {
-   ifstream myfile(path);
-   string reference_seq;
-   getline(myfile, reference_seq);
-
-   vector<vector<pair<int, int>>> seq_match_results;  // vector of match results for every sequence
-   vector<vector<string>> seq_mism_chars;
-
-
-   //string tbc_first_level;
-   //getline(myfile, tbc_first_level);
-   vector<pair<int, int>> matching_segments_first_seq;
-   vector<string> mismatched_chars_first_seq;
-   int a, b;
-   string c;   
-   string line;
-   getline(myfile, line);
-
-   // reading first level matching result
-   std::istringstream iss(line);
-   while ((iss >> a >> b >> c)) { 
-      matching_segments_first_seq.push_back(make_pair(a,b));
-      mismatched_chars_first_seq.push_back(c);
-   }
-   
-
-   seq_match_results.push_back(matching_segments_first_seq);
-   seq_mism_chars.push_back(mismatched_chars_first_seq);
-   
-
-   // reading second level matching results
-   while (getline(myfile, line)) {
-      matching_segments_first_seq.clear();
-      mismatched_chars_first_seq.clear();
-
-      std::istringstream iss(line);
-      while ((iss >> a >> b >> c)) { 
-         // getting first level matching results from second level
-
-         if (isNumber(c)) {
-            int len = stoi(c);
-            second_level_decompress(a, b, len, seq_match_results, seq_mism_chars, matching_segments_first_seq, mismatched_chars_first_seq);
-         } else {
-            matching_segments_first_seq.push_back(make_pair(a,b));
-            mismatched_chars_first_seq.push_back(c);
-         }
-      }
-      
-      seq_match_results.push_back(matching_segments_first_seq);
-      seq_mism_chars.push_back(mismatched_chars_first_seq);
-   }
-   
-   myfile.close();
-   first_level_decompress(reference_seq, seq_match_results, seq_mism_chars);
-}
-
-
-
 // lowercase character matching
 
 void lowercase_char_matching(void) {
@@ -791,6 +704,9 @@ string saveFirstMatch(vector<tuple<int,int>> matching_segments,vector<string> mi
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
+
+   ofstream myfile("output.txt");
+   myfile.close();
 
    string tbc_file;
    string ref_file;

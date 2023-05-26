@@ -3,7 +3,10 @@ tbc1.txt
 tbc2.txt
 tbc3.txt
 output.txt
+tbccopy.txt
 # Ignore files with extension `.class` & `.exe`
 *.class
 *.exe
 *.json
+*.fa
+*.7a
