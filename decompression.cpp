@@ -427,6 +427,7 @@ void construct(string decompressed){
    // Written by Lara Grgurić
    getline(targetFile, line);
    tbd_extracted = readingFile(seq_id, line);
+   string extracted=tbd_extracted;
 
    ////////////////////////////////////////////////////
 
@@ -513,7 +514,7 @@ int main(void){
    decompressed_file.erase(compressed_file.length()-2);
 
    //ZA SAD!!!!!!!!!!!!!!
-   decompressed_file+="txt";
+   decompressed_file+="fa";
    //tbd_extracted="AGCTGGGCCCTTAAGGTTTTTTCCCGGGAAATTTCCCTTTG";
 
    //start to construct the original genome

@@ -555,12 +555,12 @@ void first_level_matching(string tbc_seq) {
             // end of matching segment
             // recording position and length     
             matching_segments.push_back(make_pair(idx[0] - (length-k), length));
-            i += k-1;
+            i += k;
             length = 0;
             idx.clear();
    }
    string final = "";
-   for (i; i < tbc_seq.length(); i++) {
+   for (--i; i < tbc_seq.length(); i++) {
       final += tbc_seq[i];
    }
    mismatched_chars.push_back(final);
@@ -629,6 +629,7 @@ void saveToFile(int seq_id, string &match_result) {
    string spec_info=enc_length(tbc_other_pos_vec[seq_id],tbc_other_char_vec[seq_id]);
 
    //ZA SAD KAO PROBA!!!!
+   vector<vector<int>> something=low_loc;
    string matched_lowercase=run_length_enc_int(low_loc[seq_id]);
    string diff_lowercase_info=enc_length(diff_low_pos[seq_id],diff_low_len[seq_id]);
 
@@ -739,7 +740,8 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
       }
          
    // std::cout << row << endl; 
-   // myfile << row << endl;   
+   // myfile << row << endl;
+      lowercase_char_matching(seq_idx);   
       saveToFile(seq_idx, row);
    }
    //myfile.close();
