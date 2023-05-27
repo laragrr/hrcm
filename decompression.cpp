@@ -502,38 +502,13 @@ int main(void){
    std::cout<<"Please enter the name of compressed genome file you wish to decompress: ";
    cin>>compressed_file;
 
-   //decompress file
-   string command="7z e "+string(compressed_file);
-
    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-   //IZ NEKOG RAZLOGA ODVRTI KOMANDU I ONDA SE UGASI
-   //system(command.c_str());
-
-   //get decompressed file name
-   string decompressed_file=compressed_file;
-   decompressed_file.erase(compressed_file.length()-2);
-
-   //ZA SAD!!!!!!!!!!!!!!
-   decompressed_file+="fa";
-   //tbd_extracted="AGCTGGGCCCTTAAGGTTTTTTCCCGGGAAATTTCCCTTTG";
 
    //start to construct the original genome
-   construct(decompressed_file);
+   construct(compressed_file);
 
-   // cout<<tbd_upper;
-
-   // u_to_l();
-
-   // cout<<tbd_decompressed;
-   // write_down();
    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
    std::cout << "\nTime difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
    
-  
-
-
-
-
-
    return 0;
 }

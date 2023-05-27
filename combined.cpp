@@ -787,109 +787,16 @@ int main(void) {
    std::cout<<"Please enter the number of to-be-compressed genome files: ";
    std::cin>>tbc_num;
    vector<string> tbc_files;
+   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
    for (int i = 0; i < tbc_num; i++) {
       std::cout<<"Please enter a to-be-compressed genome file name: ";
       std::cin>>tbc_file;
       tbc_files.push_back(tbc_information_extraction(tbc_file, i));  
    }
 
-
    creating_hash_table(reference_information_extraction(ref_file));
    second_level_matching(tbc_files.size(), tbc_files);
 
-   
-   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
-   // std::cout<<"Extracted ref:\n";
-   // for(char i:reference_extracted){
-   //    std::cout<<i;
-   // }
-   // std::cout<<"\nLengths of lines:\n";
-   // for (int i:reference_line_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nLowercase pos:\n";
-   // for (int i:reference_lowercase_pos)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nLowercase lengths:\n";
-   // for (int i:reference_lowercase_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nExtracted tbc:\n";
-   // for(char i:tbc_extracted){
-   //    std::cout<<i;
-   // }
-   // std::cout<<"\nLengths of lines:\n";
-   // for (int i:tbc_line_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nLowercase pos:\n";
-   // for (int i:tbc_lowercase_pos)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nLowercase lengths:\n";
-   // for (int i:tbc_lowercase_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nN pos:\n";
-   // for (int i:tbc_n_pos)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nN lengths:\n";
-   // for (int i:tbc_n_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nOther pos:\n";
-   // for (int i:tbc_other_pos)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nOther char:\n";
-   // for (int i:tbc_other_char)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nOther lengths:\n";
-   // for (int i:tbc_other_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   
-   // //////////////////////////////////////////////////////////////////////////////////////////////
-   // string id=tbc_id+"\n";
-   // string length=to_string(tbc_length)+"\n";
-   
-    
-   // //izbacio \n iz svih ispod, inače ima prazan red između. Želimo li to?
-   // string line_lengths=run_length_enc_int(tbc_line_length);
-
-   // string n_info=enc_length(tbc_n_pos,tbc_n_length);
-   // string spec_info=enc_length(tbc_other_pos,tbc_other_char);
-
-   // //ZA SAD KAO PROBA!!!!
-   // string lowercase_info=enc_length(tbc_lowercase_pos,tbc_lowercase_length);
-
-   
-
-   // ofstream outputfile;
-   // outputfile.open("output.txt");
-   // outputfile<<id;
-   // outputfile<<length;
-   // outputfile<<line_lengths;
-   // outputfile<<n_info;
-   // outputfile<<spec_info;
-   // outputfile<<lowercase_info;
-
-   // outputfile.close();
    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
    system("7z a -m0=PPMd output.7a output.fa");
