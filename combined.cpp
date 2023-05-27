@@ -42,7 +42,12 @@ vector<vector<int>> tbc_n_length_vec;                    //length of N substring
 
 vector<vector<int>> tbc_other_char_vec;                 //char other than: A,C,G,T found in tbc
 vector<vector<int>> tbc_other_pos_vec;                   //start position of N substring
-vector<vector<int>> tbc_other_length_vec;                //length of N substring
+vector<vector<int>> tbc_other_length_vec;                //length of N substringž
+
+vector<vector<int>> low_loc;                                   //vector for where ref and tbc have same lowercase info
+vector<vector<int>> diff_low_pos;                              //vector for where ref and tbc have different lowercase info - position
+vector<vector<int>> diff_low_len;                              //vector for where ref and tbc have different lowercase info - length
+
 
 string tbc_extracted;                        //to-be-compressed sequence once all is extracted
 
@@ -336,11 +341,68 @@ string saveMatch(tuple<int, int> matching_segment, string misMatch){
    return output;
 }
 
+// lowercase character matching
+
+void lowercase_char_matching(int seq_id)
+{
+   vector<int> new_one;
+   for(int i=0;i<tbc_lowercase_length_vec[seq_id].size();i++){
+      new_one.push_back(-1);
+   }
+   vector<int> new_one_diff_pos;
+   vector<int> new_one_diff_len;
+   
+	int start_position = 0;
+	int _diff_low_len = 0;
+
+	for (int i = 0; i < tbc_lowercase_length_vec[seq_id].size(); i++)
+	{
+	//search from the start_position to the end
+	for (int j = start_position; j < reference_lowercase_length.size(); j++)
+	{
+		if ((tbc_lowercase_pos_vec[seq_id][i] == reference_lowercase_pos[j]) && (tbc_lowercase_length_vec[seq_id][i] == reference_lowercase_length[j]))
+		{
+			new_one[i] = j;
+			start_position = j + 1;
+			break;
+		}
+	}
+
+	//search from the start_position to the begin
+	if (new_one[i] == -1)
+	{
+		for (int j = start_position - 1; j > 0; j--) {
+			if ((tbc_lowercase_pos_vec[seq_id][i] == reference_lowercase_pos[j]) && (tbc_lowercase_pos_vec[seq_id][i] == reference_lowercase_length[j]))
+			{
+				new_one[i] = j;
+				start_position = j + 1;
+				break;
+			}
+		}
+	}
+
+	//record the mismatched information
+	if (new_one[i] == -1)
+	{
+		new_one_diff_pos.push_back(tbc_lowercase_pos_vec[seq_id][i]);
+		new_one_diff_len.push_back(tbc_lowercase_length_vec[seq_id][i]);
+	}
+	}
+   low_loc.push_back(new_one);
+   diff_low_pos.push_back(new_one_diff_pos);
+   diff_low_len.push_back(new_one_diff_len);
+}
+
+void print(vector<int> const &input) {
+   for (auto const &i: input) {
+      std::cout << i << " ";
+   }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Written by Lara Grgurić
 
-int k = 3;
+int k = 12;
 unordered_map<long, int> H;
 unordered_map<int, int> L;
 vector<pair<int, int>> matching_segments;
@@ -567,18 +629,22 @@ void saveToFile(int seq_id, string &match_result) {
    string spec_info=enc_length(tbc_other_pos_vec[seq_id],tbc_other_char_vec[seq_id]);
 
    //ZA SAD KAO PROBA!!!!
-   string lowercase_info=enc_length(tbc_lowercase_pos_vec[seq_id],tbc_lowercase_length_vec[seq_id]);
-   
+   string matched_lowercase=run_length_enc_int(low_loc[seq_id]);
+   string diff_lowercase_info=enc_length(diff_low_pos[seq_id],diff_low_len[seq_id]);
+
    ofstream outputfile;
-   outputfile.open("output.txt", fstream::app);
+   outputfile.open("output.fa", fstream::app);
    outputfile<<id;
    outputfile<<length;
    outputfile<<line_lengths;
    outputfile<<n_info;
    outputfile<<spec_info;
-   outputfile<<lowercase_info;
-   outputfile<<match_result<<endl;
-
+   outputfile<<matched_lowercase;
+   outputfile<<diff_lowercase_info;
+   outputfile<<match_result;
+   if(seq_id<tbc_id_vec.size()-1){
+      outputfile<<endl;
+   }
    outputfile.close();
 }
 
@@ -609,6 +675,7 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
             //myfile << pos << " " << len << " " << seq_mism_chars[j][i] <<  " ";
             match_result += to_string(pos) + " " + to_string(len) + " " + seq_mism_chars[j][i] +  " ";
          }
+         lowercase_char_matching(j);
          //myfile << endl;
          saveToFile(j, match_result);
       }      
@@ -632,6 +699,7 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
             //myfile << pos << " " << len << " " << seq_mism_chars[j][i] <<  " ";
             match_result += to_string(pos) + " " + to_string(len) + " " + seq_mism_chars[j][i] +  " ";
          }
+         lowercase_char_matching(j);
          //myfile << endl;
          saveToFile(j, match_result);
       }  
@@ -683,11 +751,11 @@ void lowercase_char_matching(void) {
 
 }
 
-void print(vector<int> const &input) {
-   for (auto const &i: input) {
-      std::cout << i << " ";
-   }
-}
+// void print(vector<int> const &input) {
+//    for (auto const &i: input) {
+//       std::cout << i << " ";
+//    }
+// }
 
 // End of code written by Lara Grgurić
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -705,7 +773,7 @@ string saveFirstMatch(vector<tuple<int,int>> matching_segments,vector<string> mi
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
 
-   ofstream myfile("output.txt");
+   ofstream myfile("output.fa");
    myfile.close();
 
    string tbc_file;
@@ -822,7 +890,7 @@ int main(void) {
    // outputfile.close();
    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
-   system("7z a -m0=PPMd output.7a output.txt");
+   system("7z a -m0=PPMd output.7a output.fa");
 
    return 0;
 }

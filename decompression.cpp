@@ -35,6 +35,10 @@ vector<int> tbd_other_char;                  //char other than: A,C,G,T found in
 vector<int> tbd_other_pos;                   //start position of N substring
 vector<int> tbd_other_length;                //length of N substring
 
+vector<int> low_loc;                         //vector for where ref and tbc have same lowercase info
+vector<int> diff_low_pos;                    //vector for where ref and tbc have different lowercase info - position
+vector<int> diff_low_len;                    //vector for where ref and tbc have different lowercase info - length
+
 string tbd_extracted;                        //to-be-decompressed sequence once all is extracted
 
 string tbd_upper;
@@ -47,7 +51,7 @@ vector<vector<string>> seq_mism_chars;
 ///////
 
 //tbd == to-be-decompressed from now on
-
+///Writen by Paulo Erak
 void reference_information_extraction(string seq_source) {
 
    string line;
@@ -253,6 +257,26 @@ vector<int> unpack(string line){
    return numbers;
 }
 
+// lowercase character matching
+
+void lowercase_char_matching(){
+   int z=0;
+   int pos,loc;
+   for(int i=0;i<low_loc.size();i++){
+      if(low_loc[i]==-1){
+         pos=diff_low_pos[z];
+         tbd_lowercase_pos.push_back(pos);
+         loc=diff_low_len[z];
+         tbd_lowercase_length.push_back(loc);
+         z++;
+      }
+      else if(low_loc[i]>=0){
+         tbd_lowercase_pos.push_back(reference_lowercase_pos[low_loc[i]]);
+         tbd_lowercase_length.push_back(reference_lowercase_length[low_loc[i]]);
+      }
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // written by Lara Grgurić
 
@@ -340,15 +364,19 @@ string readingFile(int seq_id, string line) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-
-void write_down(){
+///Writen by Paulo Erak
+void write_down(int file_number){
+   string file_name="final_"+to_string(file_number)+".fa";
    ofstream myfile;
-	myfile.open("final_t.fa");
+	myfile.open(file_name);
    myfile << tbd_id << endl;
    string leftover=tbd_decompressed;
    for(int i=0;i<tbd_line_length.size();i++){
       myfile<<leftover.substr(0,tbd_line_length[i])<<endl;
-      leftover=leftover.substr(tbd_line_length[i],leftover.size()-1);
+      if(leftover.size()!=tbd_line_length[i]){
+         leftover=leftover.substr(tbd_line_length[i],leftover.size()-1);
+      }
+      
    }
    myfile.close();
 
@@ -388,8 +416,12 @@ void construct(string decompressed){
    //ZA SAD SAMO!!!!!!
    getline(targetFile,line);
    lowercase_info=unpack(line);
-   tbd_lowercase_pos=separate_pos(lowercase_info);
-   tbd_lowercase_length= separate_len(lowercase_info);
+   low_loc=rev_rle_int(lowercase_info);
+   getline(targetFile,line);
+   lowercase_info=unpack(line);
+   diff_low_pos= separate_pos(lowercase_info);
+   diff_low_len= separate_len(lowercase_info);
+   lowercase_char_matching();
 
    ////////////////////////////////////////////////////
    // Written by Lara Grgurić
@@ -448,25 +480,25 @@ void construct(string decompressed){
    u_to_l();
 
    std::cout<<tbd_decompressed << endl;
-   write_down();
+   write_down(seq_id);
 
    seq_id++;
    }
 
 }
-
+///Writen by Paulo Erak
 int main(void){
    
    string compressed_file;
    string ref_file;
 
    //get reference genom file name
-   cout<<"Please enter a reference genome file name: ";
+   std::cout<<"Please enter a reference genome file name: ";
    cin>>ref_file;
    reference_information_extraction(ref_file);
 
    //get compressed genom file name
-   cout<<"Please enter the name of compressed genome file you wish to decompress: ";
+   std::cout<<"Please enter the name of compressed genome file you wish to decompress: ";
    cin>>compressed_file;
 
    //decompress file
