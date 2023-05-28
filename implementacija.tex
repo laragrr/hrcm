@@ -1,0 +1,9 @@
+Za implementaciju opisanog algoritma koristili smo programski jezik C++ te razvojno okruženje Visual Studio Code.
+
+\section{Vađenje podataka}
+
+\section{Podudaranje podataka}
+Za implementaciju podudaranja bilo je potrebno odabrati način na koji izračunati hash vrijednost ACGT niza za podudaranje prve razine te kombinacije pozicije, duljine i nepodudarajućih znakova za podudaranje druge razine. Metoda izračuna hash vrijednosti koju smo odabrali je polinomska rekurzivna hash funkcija. Koristili smo gotovi algoritam kao osnovu za implementaciju te funkcije (https://www.geeksforgeeks.org/string-hashing-using-polynomial-rolling-hash-function/) te smo joj dodali funkciju za kodiranje znakova A,C,G i T u brojeve 1,2,3 i 4.
+Za ostvarenje hash tablice koristili smo strukturu \textit{unordered map} zbog konstantog vremena pretraživanja, dok smo za zapis vrijednosti pozicija i duljina segmenata, kao i nepodudarajućih znakova koristili vektore zbog mogućnosti mijenjanja veličine te manje prostorne složenosti od strukture \textit{list}.
+
+\section{Kodiranje podataka}

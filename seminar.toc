@@ -1,0 +1,16 @@
+\babel@toc {croatian}{}\relax 
+\contentsline {chapter}{\numberline {1}Uvod}{1}{}%
+\contentsline {chapter}{\numberline {2}Algoritam}{2}{}%
+\contentsline {section}{\numberline {2.1}Vađenje podataka}{2}{}%
+\contentsline {section}{\numberline {2.2}Podudaranje podataka}{2}{}%
+\contentsline {subsection}{\numberline {2.2.1}Podudaranje prve razine}{3}{}%
+\contentsline {subsection}{\numberline {2.2.2}Podudaranje druge razine}{3}{}%
+\contentsline {subsection}{\numberline {2.2.3}Podudaranje malih znakova}{3}{}%
+\contentsline {section}{\numberline {2.3}Kodiranje podataka}{4}{}%
+\contentsline {section}{\numberline {2.4}Dekompresija}{4}{}%
+\contentsline {chapter}{\numberline {3}Implementacija}{5}{}%
+\contentsline {section}{\numberline {3.1}Vađenje podataka}{5}{}%
+\contentsline {section}{\numberline {3.2}Podudaranje podataka}{5}{}%
+\contentsline {section}{\numberline {3.3}Kodiranje podataka}{5}{}%
+\contentsline {chapter}{\numberline {4}Zaključak}{6}{}%
+\contentsline {chapter}{\numberline {5}Sažetak}{7}{}%
