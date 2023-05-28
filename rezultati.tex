@@ -1,0 +1,70 @@
+Testiranje smo proveli nad 10 sintetičkih sekvenci duljina od $10^2$ do $10^7$ te na 4 sekvence duljine $10^3$ znakova koje su uzete iz 4 genoma \textit{Escherichia coli}. Testiranje je ostvareno višestrukim pokretanjem kompresije i bilježenjem srednje vrijednosti rezultata.
+
+\section{Sintetičke sekvence}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{ |p{3cm}|p{3cm}|p{3cm}|p{3cm}|p{3cm}|  }
+	\hline
+	\multicolumn{5}{|c|}{Sintetičke sekvence} \\
+	\hline
+	Duljina sekvence& To-be-compressed veličine (KB)&Vrijeme kompresije (ms)&Vrijeme dekompresije (ms) & Veličina nakon kompresije (KB)\\
+	\hline
+	100 &  0.345 & 5 & 2 & 0.3\\
+	\hline
+	500 &  1.623 & 10 & 2 & 0.685\\
+	\hline
+	1000 &  3.12 & 23 & 23 & 1.15\\
+	\hline
+	5000 &  15.63 & 77 & 77 & 4.83\\
+	\hline
+	10000 &  31.2 & 101 & 101 & 9.31\\
+	\hline
+	50000 &  156 & 665 & 665 & 45\\
+	\hline
+	100000 &  312 & 1285 & 1285 & 88.2\\
+	\hline
+	500000 &  1560 & 10615 & 10615 & 440\\
+	\hline
+	1000000 &  3102,72 & 35224 & 2 & 894\\
+	\hline
+	5000000 &  15605.76 & 174433 & 2 & 4802\\
+	\hline
+\end{tabular}
+\caption{Rezultati testova nad sintetskim sekvencama}
+\label{table:1}
+\end{table}
+\pagebreak
+\section{\textit{Escherichia coli}}
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{ |p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|  }
+		\hline
+		\multicolumn{6}{|c|}{Escherichia coli $10^3$ sekvence} \\
+		\hline
+		Referenca & To-be-compressed Files & To-be-compressed veličine (KB)& Vrijeme kompresije (ms) & Vrijeme dekompresije (ms) & Veličina nakon kompresije (KB)\\
+		\hline
+		e.coli-1 & e.coli-2,
+		 e.coli-3,
+		  e.coli-4 &  3.24 & 17 & 8 & 1.1\\
+		  \hline
+		e.coli-2& e.coli-1,
+		 e.coli-3,
+		  e.coli-4 &  3.24 & 20 & 5 & 1.09\\
+		  \hline
+		e.coli-3& e.coli-1,
+		 e.coli-2,
+		  e.coli-4 &  3.24 & 19 & 4 & 1.09\\
+		  \hline
+		e.coli-4& e.coli-1,
+		 e.coli-2,
+		  e.coli-3 &  15.24 & 21 & 4 & 1.10\\
+	
+		\hline
+	\end{tabular}
+	\caption{Rezultati testova nad Escherichia coli $10^3$ sekvencama}
+	\label{table:1}
+\end{table}
+
+Program maksimalno koristi 2465.5 MB radne memorije prilikom kompresije i dekompresije sekvenci.
