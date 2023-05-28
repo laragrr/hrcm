@@ -9,6 +9,9 @@
 
 using namespace std;
 
+//keeps countbof number of sequences
+int seq_id=-1;
+
 //reference genome id and vectors
 string reference_id;
 int reference_length;
@@ -132,7 +135,7 @@ string reference_information_extraction(string seq_source) {
 }
 
 //function for extraction of information from tbc sequence
-string tbc_information_extraction(string seq_source, int seq_id) {
+string tbc_information_extraction(string seq_source) {
    string line;
 
    //try to open a file with a given name
@@ -169,6 +172,7 @@ string tbc_information_extraction(string seq_source, int seq_id) {
       //write down the id
       if(line[0]=='>'){
          tbc_id_vec.push_back(line);
+         seq_id++;
       }
       
       else{
@@ -286,6 +290,7 @@ string tbc_information_extraction(string seq_source, int seq_id) {
    if(found_first){
       tbc_other_length_vec[seq_id].push_back(length);
    }
+   string ex=tbc_extracted;
    tbc_extracted.erase(remove(tbc_extracted.begin(), tbc_extracted.end(), 'N'), tbc_extracted.end());    //remove N from tbc_extracted
    return tbc_extracted;
 }
@@ -407,7 +412,7 @@ unordered_map<long, int> H;
 unordered_map<int, int> L;
 vector<pair<int, int>> matching_segments;
 vector<string> mismatched_chars;
-int length = 0, percent = 50;
+int length = 0, percent = 10;
 
 vector<unordered_map<long, int>> H_tbc_seq;  // vector of hash tables for new referential sequences
 vector<unordered_map<int, long>> L_tbc_seq;
@@ -480,7 +485,7 @@ void first_level_matching(string tbc_seq) {
    for (i = 0; i < tbc_seq.length() - k; i++) {
       string k_mer = "";
       for (int j = 0; j < k; j++) {
-         k_mer += tbc_seq[i+j];
+   k_mer += tbc_seq[i+j];
       }
       Hash_f hash_func = Hash_f(k_mer);
 
@@ -551,6 +556,7 @@ void first_level_matching(string tbc_seq) {
          }
       }
    }
+   string final = "";
    if (length != 0) {
             // end of matching segment
             // recording position and length     
@@ -559,10 +565,16 @@ void first_level_matching(string tbc_seq) {
             length = 0;
             idx.clear();
    }
-   string final = "";
+   else{
+      if(mismatched_string.length()){
+         final=mismatched_string;
+         i++;
+      }
+   }
    for (--i; i < tbc_seq.length(); i++) {
       final += tbc_seq[i];
    }
+   std::cout<<final;
    mismatched_chars.push_back(final);
 }
 
@@ -624,14 +636,34 @@ void saveToFile(int seq_id, string &match_result) {
       
    //izbacio \n iz svih ispod, inače ima prazan red između. Želimo li to?
    string line_lengths=run_length_enc_int(tbc_line_length_vec[seq_id]);
-
-   string n_info=enc_length(tbc_n_pos_vec[seq_id],tbc_n_length_vec[seq_id]);
-   string spec_info=enc_length(tbc_other_pos_vec[seq_id],tbc_other_char_vec[seq_id]);
+   int s=tbc_n_pos_vec[seq_id].size();
+   string n_info,spec_info,matched_lowercase,diff_lowercase_info;
+   if(s>0){
+      n_info=enc_length(tbc_n_pos_vec[seq_id],tbc_n_length_vec[seq_id]);
+   }
+   else{
+      n_info="\n";
+   }
+   s=tbc_other_pos_vec[seq_id].size();
+   if(s>0){
+      spec_info=enc_length(tbc_other_pos_vec[seq_id],tbc_other_char_vec[seq_id]);
+   }
+   else{
+      spec_info="\n";
+   }
+   
 
    //ZA SAD KAO PROBA!!!!
    vector<vector<int>> something=low_loc;
-   string matched_lowercase=run_length_enc_int(low_loc[seq_id]);
-   string diff_lowercase_info=enc_length(diff_low_pos[seq_id],diff_low_len[seq_id]);
+   s=low_loc[seq_id].size();
+   if(s>0){
+      matched_lowercase=run_length_enc_int(low_loc[seq_id]);
+      diff_lowercase_info=enc_length(diff_low_pos[seq_id],diff_low_len[seq_id]);
+   }
+   else{
+      matched_lowercase="\n";
+      diff_lowercase_info="\n";
+   }
 
    ofstream outputfile;
    outputfile.open("output.fa", fstream::app);
@@ -658,9 +690,6 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
 
    vector<vector<pair<int, int>>> seq_match_results;  // vector of match results for every sequence
    vector<vector<string>> seq_mism_chars;
-
-   //ofstream myfile;
-   //myfile.open("output.txt");
 
 
    for (j = 0; j < percent*seq_count/100; j++) {
@@ -703,6 +732,8 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
          lowercase_char_matching(j);
          //myfile << endl;
          saveToFile(j, match_result);
+         // create hash table for every sequence in the percentage
+         create_hash_table_tbc_seq(matching_segments, mismatched_chars);
       }  
       matching_segments.clear();
       mismatched_chars.clear(); 
@@ -718,7 +749,7 @@ void second_level_matching(int seq_count, vector<string> &tbc_seqs) {
       
       for (int i = 0; i < seq_match_results[seq_idx].size(); i++) {
          tuple<int,int,int> max_matching = {0, 0 ,0};
-         for (int hash_table_idx = 0; hash_table_idx < seq_idx; hash_table_idx++) {
+         for (int hash_table_idx = 0; hash_table_idx < H_tbc_seq.size(); hash_table_idx++) {
 
             int len = search_match(i, seq_match_results[seq_idx], seq_mism_chars[seq_idx], hash_table_idx, seq_match_results[hash_table_idx], seq_mism_chars[hash_table_idx]);
             
@@ -787,19 +818,24 @@ int main(void) {
    std::cout<<"Please enter the number of to-be-compressed genome files: ";
    std::cin>>tbc_num;
    vector<string> tbc_files;
-   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+   vector<string> tbc_files_unread;
    for (int i = 0; i < tbc_num; i++) {
       std::cout<<"Please enter a to-be-compressed genome file name: ";
       std::cin>>tbc_file;
-      tbc_files.push_back(tbc_information_extraction(tbc_file, i));  
+      tbc_files_unread.push_back(tbc_file);  
+   }
+   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+   for (int i = 0; i < tbc_num; i++) {
+      tbc_files.push_back(tbc_information_extraction(tbc_files_unread[i]));  
    }
 
    creating_hash_table(reference_information_extraction(ref_file));
    second_level_matching(tbc_files.size(), tbc_files);
 
    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-   std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+   std::cout << "\nTime difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
    system("7z a -m0=PPMd output.7a output.fa");
+   
 
    return 0;
 }

@@ -41,7 +41,7 @@ vector<int> diff_low_len;                    //vector for where ref and tbc have
 
 string tbd_extracted;                        //to-be-decompressed sequence once all is extracted
 
-string tbd_upper;
+string tbd_upper;                            //vector that will have to be run through u_to_l to return lowercase
 
 string tbd_decompressed;                      //original 
 
@@ -200,6 +200,68 @@ void n_spec_returned(){
       //cout<<"Test returned: "+returned+"\n";
    }
    
+   tbd_upper=returned;
+}
+
+void n_returned(){
+   //RELATIVNE UDALJENOSTI!!!!
+   string returned;
+   int counter_e=0;
+   int counter_n=0;
+   int last_n=0;
+
+   //Boga pitaj kako ovo radi
+   while(returned.length()<tbd_length){
+      if((last_n+tbd_n_pos[counter_n]>returned.length() || counter_n==tbd_n_pos.size()) && counter_e<tbd_length){
+         returned+=tbd_extracted[counter_e];
+         counter_e++;
+      }
+      else if (last_n+tbd_n_pos[counter_n]==returned.length() && counter_n<tbd_n_pos.size())
+      {
+         last_n=returned.length()+tbd_n_length[counter_n];
+         for(int i=0;i<tbd_n_length[counter_n];i++){
+            returned+="N";
+         }
+         counter_n++;
+      }
+      else{
+         std::cout<<"Something went wrong during returning.";
+         std::cout<<returned;
+         std::cout<<"\n";
+         exit(-1);
+      }
+      //cout<<"Test returned: "+returned+"\n";
+   }
+   tbd_upper=returned;
+}
+
+void spec_returned(){
+   //RELATIVNE UDALJENOSTI!!!!
+   string returned;
+   int counter_e=0;
+   int counter_s=0;
+   int last_s=0;
+
+   //Boga pitaj kako ovo radi
+   while(returned.length()<tbd_length){
+      if((last_s+tbd_other_pos[counter_s]>returned.length() || counter_s==tbd_other_pos.size()) && counter_e<tbd_length){
+         returned+=tbd_extracted[counter_e];
+         counter_e++;
+      }
+      else if (last_s+tbd_other_pos[counter_s]==returned.length() && counter_s<tbd_other_pos.size())
+      {
+         last_s=returned.length()+1;
+         returned+=(tbd_other_char[counter_s]+'A');
+         counter_s++;
+      }
+      else{
+         std::cout<<"Something went wrong during returning.";
+         std::cout<<returned;
+         std::cout<<"\n";
+         exit(-1);
+      }
+      //cout<<"Test returned: "+returned+"\n";
+   }
    tbd_upper=returned;
 }
 
@@ -472,15 +534,34 @@ void construct(string decompressed){
    // {
    //     std::cout<<i<<", ";
    // }
+   int s=tbd_n_pos.size();
+   int s2=tbd_other_pos.size();
 
+   if(s>0 && s2>0){
+      n_spec_returned();
+   }
+   else if(s>0 && s2==0){
+      n_returned();
+   }
+   else if(s==0 && s2>0){
+      spec_returned();
+   }
+   else{
+      tbd_upper=tbd_extracted;
+   }
 
-   n_spec_returned();
+   //std::cout<<tbd_upper << endl;
 
-   std::cout<<tbd_upper << endl;
+   s=low_loc.size();
+   if(s>0){
+      u_to_l();
+   }
+   else{
+      tbd_decompressed=tbd_upper;
+   }
+   
 
-   u_to_l();
-
-   std::cout<<tbd_decompressed << endl;
+   //std::cout<<tbd_decompressed << endl;
    write_down(seq_id);
 
    seq_id++;
@@ -508,7 +589,7 @@ int main(void){
    construct(compressed_file);
 
    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-   std::cout << "\nTime difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+   std::cout << "\nTime difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
    
    return 0;
 }
