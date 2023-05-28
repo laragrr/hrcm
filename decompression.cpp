@@ -127,13 +127,14 @@ void reference_information_extraction(string seq_source) {
    }
 }
 
+//return original lowercase
 void u_to_l(){
    string returned;
    int counter_u=0;
    int counter_l=0;
    int last_l=0;
    
-   //Boga pitaj kako ovo radi
+
    while(returned.length()<tbd_length){
       if((last_l+tbd_lowercase_pos[counter_l]>returned.length() || counter_l==tbd_lowercase_pos.size()) && counter_u<tbd_length){
          returned+=tbd_upper[counter_u];
@@ -161,9 +162,8 @@ void u_to_l(){
    
 }
 
-
+//return original N and other characters
 void n_spec_returned(){
-   //RELATIVNE UDALJENOSTI!!!!
    string returned;
    int counter_e=0;
    int counter_n=0;
@@ -171,7 +171,6 @@ void n_spec_returned(){
    int counter_s=0;
    int last_s=0;
 
-   //Boga pitaj kako ovo radi
    while(returned.length()<tbd_length){
       if((last_n+tbd_n_pos[counter_n]>returned.length() || counter_n==tbd_n_pos.size()) && (last_s+tbd_other_pos[counter_s]>returned.length() || counter_s==tbd_other_pos.size()) && counter_e<tbd_length){
          returned+=tbd_extracted[counter_e];
@@ -197,20 +196,18 @@ void n_spec_returned(){
          std::cout<<"\n";
          exit(-1);
       }
-      //cout<<"Test returned: "+returned+"\n";
    }
    
    tbd_upper=returned;
 }
 
+////return original N characters
 void n_returned(){
-   //RELATIVNE UDALJENOSTI!!!!
    string returned;
    int counter_e=0;
    int counter_n=0;
    int last_n=0;
 
-   //Boga pitaj kako ovo radi
    while(returned.length()<tbd_length){
       if((last_n+tbd_n_pos[counter_n]>returned.length() || counter_n==tbd_n_pos.size()) && counter_e<tbd_length){
          returned+=tbd_extracted[counter_e];
@@ -235,14 +232,13 @@ void n_returned(){
    tbd_upper=returned;
 }
 
+//return original other characters
 void spec_returned(){
-   //RELATIVNE UDALJENOSTI!!!!
    string returned;
    int counter_e=0;
    int counter_s=0;
    int last_s=0;
 
-   //Boga pitaj kako ovo radi
    while(returned.length()<tbd_length){
       if((last_s+tbd_other_pos[counter_s]>returned.length() || counter_s==tbd_other_pos.size()) && counter_e<tbd_length){
          returned+=tbd_extracted[counter_e];
@@ -260,13 +256,12 @@ void spec_returned(){
          std::cout<<"\n";
          exit(-1);
       }
-      //cout<<"Test returned: "+returned+"\n";
    }
    tbd_upper=returned;
 }
 
 
-
+//reverse run-length-encoding
 vector<int> rev_rle_int(vector<int> vec){
    vector<int> normal;
    int value;
@@ -281,6 +276,7 @@ vector<int> rev_rle_int(vector<int> vec){
    return normal;
 }
 
+//separate given string and store positions
 vector<int> separate_pos(vector<int> vec){
    vector<int> pos;
 
@@ -291,6 +287,7 @@ vector<int> separate_pos(vector<int> vec){
    return pos;
 }
 
+//separate given string and store lengths
 vector<int> separate_len(vector<int> vec){
    vector<int> len;
 
@@ -301,7 +298,7 @@ vector<int> separate_len(vector<int> vec){
    return len;
 }
 
-
+//take a string and return vector of numbers
 vector<int> unpack(string line){
    vector<int> numbers;
    stringstream ss(line);
@@ -320,7 +317,6 @@ vector<int> unpack(string line){
 }
 
 // lowercase character matching
-
 void lowercase_char_matching(){
    int z=0;
    int pos,loc;
@@ -427,6 +423,7 @@ string readingFile(int seq_id, string line) {
 
 ///////////////////////////////////////////////////////////////////////////////
 ///Writen by Paulo Erak
+//write sequence to file
 void write_down(int file_number){
    string file_name="final_"+to_string(file_number)+".fa";
    ofstream myfile;
@@ -444,6 +441,7 @@ void write_down(int file_number){
 
 }
 
+//reconstruct a given compressed sequence
 void construct(string decompressed){
    string line;
    ifstream targetFile(decompressed);
@@ -475,7 +473,6 @@ void construct(string decompressed){
 
 
 
-   //ZA SAD SAMO!!!!!!
    getline(targetFile,line);
    lowercase_info=unpack(line);
    low_loc=rev_rle_int(lowercase_info);
@@ -492,48 +489,7 @@ void construct(string decompressed){
    string extracted=tbd_extracted;
 
    ////////////////////////////////////////////////////
-
-   // std::cout<<tbd_id+"\n";
-   // std::cout<<tbd_length+"\n";
-   // std::cout<<"\nExtracted tbc:\n";
-   // for(char i:tbd_extracted){
-   //    std::cout<<i;
-   // }
-   // std::cout<<"\nLengths of lines:\n";
-   // for (int i:tbd_line_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nLowercase pos:\n";
-   // for (int i:tbd_lowercase_pos)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nLowercase lengths:\n";
-   // for (int i:tbd_lowercase_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nN pos:\n";
-   // for (int i:tbd_n_pos)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nN lengths:\n";
-   // for (int i:tbd_n_length)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nOther pos:\n";
-   // for (int i:tbd_other_pos)
-   // {
-   //     std::cout<<i<<", ";
-   // }
-   // std::cout<<"\nOther char:\n";
-   // for (int i:tbd_other_char)
-   // {
-   //     std::cout<<i<<", ";
-   // }
+   ///Writen by Paulo Erak
    int s=tbd_n_pos.size();
    int s2=tbd_other_pos.size();
 
@@ -550,8 +506,6 @@ void construct(string decompressed){
       tbd_upper=tbd_extracted;
    }
 
-   //std::cout<<tbd_upper << endl;
-
    s=low_loc.size();
    if(s>0){
       u_to_l();
@@ -560,15 +514,12 @@ void construct(string decompressed){
       tbd_decompressed=tbd_upper;
    }
    
-
-   //std::cout<<tbd_decompressed << endl;
    write_down(seq_id);
 
    seq_id++;
    }
 
 }
-///Writen by Paulo Erak
 int main(void){
    
    string compressed_file;

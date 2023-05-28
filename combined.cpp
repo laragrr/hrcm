@@ -23,14 +23,6 @@ vector<int> reference_lowercase_length;      //length of lowercase substring
 
 string reference_extracted;               	//reference sequence once all is extracted
 
-// vector<int> reference_n_pos;                 //start position of N substring 
-// vector<int> reference_n_length;              //length of N substring
-
-// vector<char> reference_other_char;           //char other than: A,C,G,T found in reference
-// vector<int> reference_other_pos;             //start position of N substring
-// vector<int> reference_other_length;          //length of N substring
-
-
 //to-be-compressed genome id and vectors 
 vector<string> tbc_id_vec;
 vector<int> tbc_length_vec;
@@ -316,13 +308,6 @@ string run_length_enc_int(vector<int> vec){
    return out;
 }
 
-//je li zbilja potrebno???
-string run_length_enc_id(string ID){
-   string out;
-   
-   return out;
-}
-
 //can be used for lowercase(pos, length), n(pos,length) and special characters(pos, spec_char)
 string enc_length(vector<int> pos, vector<int> length){
    string out;
@@ -332,9 +317,6 @@ string enc_length(vector<int> pos, vector<int> length){
    out+=to_string(pos[pos.size()-1])+" "+to_string(length[pos.size()-1])+"\n"; 
    return out;
 }
-
-
-//TUPLE RADI PROBLEME, PREUMORAN DA SKUŽIM ŠTO JE PROBLEM
 
 //saving mismatched information
 string saveMatch(tuple<int, int> matching_segment, string misMatch){
@@ -634,37 +616,42 @@ void saveToFile(int seq_id, string &match_result) {
    string length=to_string(tbc_length_vec[seq_id])+"\n";
 
       
-   //izbacio \n iz svih ispod, inače ima prazan red između. Želimo li to?
+   
    string line_lengths=run_length_enc_int(tbc_line_length_vec[seq_id]);
    int s=tbc_n_pos_vec[seq_id].size();
    string n_info,spec_info,matched_lowercase,diff_lowercase_info;
+   //are there any N, write down info
    if(s>0){
       n_info=enc_length(tbc_n_pos_vec[seq_id],tbc_n_length_vec[seq_id]);
    }
+   //if no, continue
    else{
       n_info="\n";
    }
    s=tbc_other_pos_vec[seq_id].size();
+   //are there any other characters,  write down info
    if(s>0){
       spec_info=enc_length(tbc_other_pos_vec[seq_id],tbc_other_char_vec[seq_id]);
    }
+   //if no, continue
    else{
       spec_info="\n";
    }
    
 
-   //ZA SAD KAO PROBA!!!!
-   vector<vector<int>> something=low_loc;
    s=low_loc[seq_id].size();
+   //are there any lowercase,  write down info
    if(s>0){
       matched_lowercase=run_length_enc_int(low_loc[seq_id]);
       diff_lowercase_info=enc_length(diff_low_pos[seq_id],diff_low_len[seq_id]);
    }
+   //if no, continue
    else{
       matched_lowercase="\n";
       diff_lowercase_info="\n";
    }
 
+   //write to file line by line
    ofstream outputfile;
    outputfile.open("output.fa", fstream::app);
    outputfile<<id;
@@ -832,8 +819,10 @@ int main(void) {
    creating_hash_table(reference_information_extraction(ref_file));
    second_level_matching(tbc_files.size(), tbc_files);
 
+   //time elapsed
    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
    std::cout << "\nTime difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+
    system("7z a -m0=PPMd output.7a output.fa");
    
 
