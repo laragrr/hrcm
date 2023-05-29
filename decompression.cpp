@@ -520,19 +520,25 @@ void construct(string decompressed){
    }
 
 }
-int main(void){
-   
+int main(int argc, char** argv){
    string compressed_file;
    string ref_file;
 
    //get reference genom file name
-   std::cout<<"Please enter a reference genome file name: ";
-   cin>>ref_file;
+   // std::cout<<"Please enter a reference genome file name: ";
+   // cin>>ref_file;
+
+   if (argc != 3)
+      return std::cout << "Usage: a.exe <ref_file> <cpf>" << std::endl, 1;
+
+   ref_file = argv[1];
    reference_information_extraction(ref_file);
 
    //get compressed genom file name
-   std::cout<<"Please enter the name of compressed genome file you wish to decompress: ";
-   cin>>compressed_file;
+   // std::cout<<"Please enter the name of compressed genome file you wish to decompress: ";
+   // cin>>compressed_file;
+
+   compressed_file = argv[2];
 
    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 

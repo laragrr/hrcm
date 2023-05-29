@@ -6,6 +6,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <sstream>
+#include <cassert>
 
 using namespace std;
 
@@ -791,26 +792,47 @@ string saveFirstMatch(vector<tuple<int,int>> matching_segments,vector<string> mi
    return output;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int main(void) {
+int main(int argc, char** argv) {
+
+   int tbc_num = 0;
+   vector<string> tbc_files_unread;
+   string s1, ref_file;
+
+   try {
+   
+
+      assert(string(argv[1]) == "-r");
+      assert(string(argv[3]) == "-f");
+
+      ref_file = argv[2];
+
+      assert(argc >= 5);
+
+      
+      for(int i = 4; i < argc; ++i)
+         s1 = argv[i], tbc_files_unread.push_back(s1), ++tbc_num; 
+   }
+   catch (exception e) {
+      return std::cout << "Usage: a.exe -r <ref_file> -f <tbc_file> <tbc_file> ..." << std::endl, 1;  
+   }
 
    ofstream myfile("output.fa");
    myfile.close();
 
-   string tbc_file;
-   string ref_file;
-   std::cout<<"Please enter a reference genome file name: ";
-   std::cin>>ref_file;
+   
+   // std::cout<<"Please enter a reference genome file name: ";
+   // std::cin>>ref_file;
    // Written by Lara Grgurić
-   int tbc_num;
-   std::cout<<"Please enter the number of to-be-compressed genome files: ";
-   std::cin>>tbc_num;
+   // int tbc_num;
+   // std::cout<<"Please enter the number of to-be-compressed genome files: ";
+   // std::cin>>tbc_num;
    vector<string> tbc_files;
-   vector<string> tbc_files_unread;
-   for (int i = 0; i < tbc_num; i++) {
-      std::cout<<"Please enter a to-be-compressed genome file name: ";
-      std::cin>>tbc_file;
-      tbc_files_unread.push_back(tbc_file);  
-   }
+   
+   // for (int i = 0; i < tbc_num; i++) {
+      // std::cout<<"Please enter a to-be-compressed genome file name: ";
+      // std::cin>>tbc_file;
+      // tbc_files_unread.push_back(tbc_file);  
+   // }
    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
    for (int i = 0; i < tbc_num; i++) {
       tbc_files.push_back(tbc_information_extraction(tbc_files_unread[i]));  
