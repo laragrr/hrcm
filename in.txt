@@ -1,4 +1,0 @@
-e_coli_103_1.fa
-e_coli_103_2.fa
-e_coli_103_3.fa
-e_coli_103_4.fa
