@@ -5,7 +5,7 @@ The goal of this project is to implement the Hybrid Referential Compression Meth
 Testing results of our implementation can be found in the [documentation file](https://github.com/laragrr/hrcm/main/documentation.pdf).
 
 # Authors:
-[Paulo Erak]()<br />
+[Paulo Erak](https://github.com/Sleepwalker2001)<br />
 [Lara Grgurić](https://github.com/laragrr)
 
 # Compile
