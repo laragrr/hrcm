@@ -1,7 +1,7 @@
-Algoritam koji implementiramo opisan je u radu [REFERENCA] te ćemo dati kratki osvrt na njega. Metoda hibridne referentne kompresije podijeljena je na procese kompresije i dekompresije. Proces kompresije podijeljen je na tri dijela ovim redoslijedom izvođenja: vađenje, podudaranje i kodiranje podataka. Ulaz u proces kompresije su jedna datoteka referentnog genoma te jedna ili više datoteka genoma koje treba sažeti. 
+Algoritam koji implementiramo opisan je u radu \cite{hrcm} te ćemo dati kratki osvrt na njega. Metoda hibridne referentne kompresije podijeljena je na procese kompresije i dekompresije. Proces kompresije podijeljen je na tri dijela ovim redoslijedom izvođenja: vađenje, podudaranje i kodiranje podataka. Ulaz u proces kompresije su jedna datoteka referentnog genoma te jedna ili više datoteka genoma koje treba sažeti. 
 
 \section{Vađenje podataka}
-Ulaz dobiven u ovaj dio kompresije su datoteke koje sadrže genome. Vađenje podataka sastoji se od nekoliko koraka, međutim koraci potrebni za vađenje podataka iz referentnog genoma su samo oni koji vraćaju ACGT sekvencu. Koraci redom su:
+Ulazi za ovaj dio kompresije su datoteke koje sadrže genome. Vađenje podataka sastoji se od nekoliko koraka, međutim koraci potrebni za vađenje podataka iz referentnog genoma su samo oni koji spremaju informaciju o malim znakovima i vraćaju ACGT sekvencu. Koraci redom su:
 \begin{enumerate}[label=(\roman*)]
  \item Izvođenje prvog reda kao identifikatora sekvence
  \item Zapis duljine pročitanog reda
@@ -9,25 +9,118 @@ Ulaz dobiven u ovaj dio kompresije su datoteke koje sadrže genome. Vađenje pod
  \item Spremanje informacija o pozicijama i duljinama segmenata sačinjenih od N znakova te informacija o pozicijama i duljinama segmenata sačinjenih od specijalnih znakova
  \item Izbacivanje svih znakova iz sekvence osim ACGT znakova
 \end{enumerate}
+\pagebreak
+\subsubsection{Primjer}
+Dobijemo dvije FASTA datoteke koje sadrže sljedeće sekvence od kojih je prva referentna, a druga sekvenca koju želimo sažeti:\newline
+
+\begin{minipage}{10cm}
+	\textbf{$>$Xchr1.fa\newline \quad AGCTGGGCCCTTaaggNNNnnnXXX\newline
+	TTTCCCGGGAAAaaaTTTccctttg\newline
+	$>$Ychr1.fa\newline
+	AGCTGGGCCCTTaaggtttnnnXXX\newline
+	TTTCCCGGGNNNaaaTTTccctttg\newline}
+\end{minipage}
+
+Program učitava sekvencu X kao referentnu te krene s obradom kako bi se podaci dobiveni obradom koristili tijekom podudaranja i enkripcije. Kod reference je jedino bitno uzeti id, dobiti pozicije i duljine nizova malih znakova i čisti ACGT-niz. Njih spremamo u različite spremnike i čuvamo za daljnju obradu. U ovom primjeru dobivamo:\newline
+
+\begin{minipage}{10cm}
+	\textbf{Id: Xchr1.fa\newline
+		Čista sekvenca ACGT:\newline
+		AGCTGGGCCCTTAAGGTTTCCCGGGAAAAAATTTCCCTTTG\newline
+		Pozicije početka nizova malih znakova: \newline 12, 3, 15, 3 \newline
+		Duljine nizova malih znakova:\newline 4, 3, 3, 7\newline}
+\end{minipage}
+
+Program slično radi i za sekvence koje želimo sažeti, ali za njih još program vadi podatke o poziciji i duljini znakova N i ostalih znakova. Oni se neće koristiti prilikom podudaranja ali su ključni za sastavljanje početne sekvence prilikom dekompresije. Prolaskom sekvence koju želimo sažeti kroz funkciju za vađenje informacija dobivamo sljedeće: 
+
+\begin{minipage}{10cm}
+	\textbf{Id: Ychr1.fa\newline
+		Čista sekvenca ACGT:\newline
+		TGGGCCCTTAAGGTTTTTTCCCGGGAAATTTCCCTTTGG\newline
+		Pozicije početka nizova malih znakova: \newline 12, 15, 3 \newline
+		Duljine nizova malih znakova:\newline 10, 3, 7\newline
+		Pozicije početka nizova N znakova: \newline 19, 12\newline
+		Duljine nizova N znakova:\newline 3, 3\newline
+		Pozicije ostalih znakova: \newline 22, 0, 0 \newline
+		Ostali znakovi:\newline X, X, X\newline
+		Duljina linija: 25 \newline
+	}
+\end{minipage}
+
+Sekvence ACGT-a i informacije o malim slovima idu dalje na podudaranje, a ostale informacije se pamte za ponovno sastavljanje sekvenci.
+
+
+
  
 \section{Podudaranje podataka}
 Proces podudaranja podataka obavlja se kroz dva dijela: podudaranje ACGT sekvenci i podudaranje informacija o malim znakovima. Podudaranje ACGT sekvenci temelji se na podudaranju k-mera sekvence koja se sažima s k-merima referentne sekvence te se izvodi na dvije razine.
 
 \subsection{Podudaranje prve razine}
 Za podudaranje prve razine potrebni su referentna sekvenca i sekvenca koju želimo sažeti. 
-Prvi korak izrada je hash tablice na temelju k-mera referentne sekvence. Pri tome koristimo dvije podatkovne strukture: H i L. U strukturu H upisujemo vrijednosti oblika: $H[vrijednost_{i}] = i$. U slučaju pojave k-mera iste hash vrijednosti, vrijednost zapisana u $H[vrijednost_{i}]$ zapisuje se na poziciju trenutačnoog indeksa u strukturu L. Znači da su nam za ostvarenje ovog podudaranja potrebne dvije formule: $L[i] = H[vrijednost_{i}]$ i $H[vrijednost_{i}] = i$. Na taj način stvaramo lanac indeksa pozicija k-mera identične hash vrijednosti.
+Prvi korak izrada je hash tablice na temelju k-mera referentne sekvence. Pri tome koristimo dvije podatkovne strukture: H i L. U strukturu H upisujemo vrijednosti oblika: $H[vrijednost_{i}] = i$. U slučaju pojave k-mera iste hash vrijednosti, vrijednost zapisana u $H[vrijednost_{i}]$ zapisuje se na poziciju trenutačnog indeksa u strukturu L. Znači da su nam za ostvarenje ovog podudaranja potrebne dvije formule: $L[i] = H[vrijednost_{i}]$ i $H[vrijednost_{i}] = i$. Na taj način stvaramo lanac indeksa pozicija k-mera identične hash vrijednosti.
 Drugi je korak pretraga sekvence koju želimo sažeti za najduljim podnizom koji se poklapa s referentnom sekvencom. To izvodimo izračunavanjem hash vrijednosti k-mera te pretraživanjem lanaca stvorenih strukturama H i L s ciljem pronalaska najduljeg niza uzastopnih vrijednosti indeksa tih k-mera u referentnoj sekvenci. Pri tom pretraživanju dok se pronalaze podudaranja, bilježi se duljina niza, a pri pronalasku nepodudaranja, bilježi se jedan ili više znakova nepodudaranja. Time dobivamo tuple vrijednost (pozicija, duljina) koji služi kao zamjena za pronađeni segment sekvence. 
 
 \subsection{Podudaranje druge razine}
 Podudaranje druge razine kompleksnije je od podudaranja prve razine zbog više razloga. Umjesto korištenja referentne sekvence, koriste se isključivo rezultati podudaranja prve razine. Kako bi se to ostvarilo, potrebno je odabrati postotak svih sekvenci za sažimanje od kojih će svaka imati ulogu referentne sekvence za sve sekvence koje slijede iza nje.
-Postupak također započinje izgradnjom hash tablice, ali u ovom je koraku izračun hash vrijednosti kompleksniji jer u obzir uzima poziciju, duljinu i hash vrijednost znaka nepodudaranja. Podudaranje hash vrijednosti ne znači nužno da su ta dva tuplea identična, što znači da je potrebna usporedba svakog elementa kako bi se potvrdilo podudaranje. Za svaku sekvencu potrebno je usporediti podudaranja sa svim referentnim sekvencama te odabrati najdulje podudaranje. U slučaju podudaranja, zapisuje se tuple (id sekvence, pozicija i duljina), pri čemu vrijednost id sekvence označava indeks referentne sekvence. U slučaju nepodudaranja, tuple kojemu ne možemo pronaći podudaranje prepisujemo.
+Postupak također započinje izgradnjom hash tablice, ali u ovom je koraku izračun hash vrijednosti kompleksniji jer u obzir uzima poziciju, duljinu i hash vrijednost znaka nepodudaranja. Podudaranje hash vrijednosti ne znači nužno da su ta dva tuplea identična, što znači da je potrebna usporedba svakog elementa kako bi se potvrdilo podudaranje. Za svaku sekvencu potrebno je usporediti podudaranja sa svim referentnim sekvencama te odabrati najdulje podudaranje. U slučaju podudaranja, zapisuje se tuple (id sekvence, pozicija i duljina), pri čemu vrijednost id sekvence označava indeks referentne sekvence. U slučaju nepodudaranja, tuple kojemu ne možemo pronaći podudarajući tuple u referentnoj sekvenci prepisujemo.
 
 \subsection{Podudaranje malih znakova}
-Podudaranje malih znakova provodi se prolaskom kroz tuplove malih znakova sekvenci koje želimo sažeti. Te tuple dobili smo tijekom procesa vađenja podataka i sastoje se od pozicije i duljine niza malih znakova od te pozicije. Slične tuple dobijemo i za referentnu sekvencu. Oni su također ključni u ovom procesu podudaranja. Inicijaliziramo niz koji je iste duljine kao i broj tuplea sekvence koju želimo sažeti. On će za sad na svim mjestima imati poseban znak ili broj (npr. -1) koji će indicirati da se točno taj tuple, tj. ta kombinacija pozicije i duljine, ne može naći u referentnoj sekvenci. Sada počinjemo prolaziti kroz tuple malih znakova sekvence koju želimo sažeti i uspoređujemo svakog od njih sa svakim tupleom malih znakova referentne sekvence. Ako se podudaraju stavimo u inicijaliziranu listu za taj tuple redni broj tupla referentne sekvence s kojom se podudara. U suprotnom zapisujemo taj tuple u niz tuplea razlike. 
+Podudaranje malih znakova provodi se prolaskom kroz tuplove malih znakova sekvenci koje želimo sažeti. Tu vrstu tupleova dobili smo tijekom procesa vađenja podataka i sastoje se od pozicije i duljine niza malih znakova od te pozicije. Slične tupleove dobijemo i za referentnu sekvencu. Oni su također ključni u ovom procesu podudaranja. Inicijaliziramo niz koji je iste duljine kao i broj tuplea sekvence koju želimo sažeti. On će za sad na svim mjestima imati poseban znak ili broj (npr. -1) koji će indicirati da se točno taj tuple, tj. ta kombinacija pozicije i duljine, ne može naći u referentnoj sekvenci. Sada počinjemo prolaziti kroz tupleove vrijednosti malih znakova sekvence koju želimo sažeti i uspoređujemo svakog od njih sa svakim tupleom malih znakova referentne sekvence. Ako se podudaraju stavimo u inicijaliziranu listu za taj tuple redni broj tupla referentne sekvence s kojom se podudara. U suprotnom zapisujemo taj tuple u niz tuplea razlike. 
+
+\subsubsection{Primjer}
+Možemo zapisati tupleove u ovom slučaju poput kombinacije dva broja \textit{[pozicija, duljina]} i to ćemo koristiti u ovom primjeru za bolju vizualizaciju. 
+Obradom naših sekvenci  i vađenjem podataka o malim znakovima dobili smo sljedeće tupleove:\newline
+
+\begin{minipage}{10cm}
+	\textbf{Informacije o malim znakovima reference:\newline
+		 {[12, 4], [3, 3], [15,
+			3], [3, 7]}\newline
+		Informacije o malim znakovima sekvence za sažimanje: \newline {[12, 10],
+			[15, 3], [3, 7]}
+		\newline
+		}
+\end{minipage}
+
+Možemo vidjeti da imamo dva tuplea koji se nalaze i u jednom i u drugom nizu [15, 3] i [3, 7]. Iskoristiti ćemo tu informaciju i napraviti dva niza. Prvi u kojem ćemo čuvati redni broj tuplea iz reference koji se (i ako se) pojavljuje u sekvenci za sažimanje. Drugi u koji ćemo spremati tupleove koji se ne pojavljuju u referenci i to onim redom kako se pojavljuju u sekvenci za sažimanje. Prvi niz će imati onoliko elemenata koliko imamo mjesta s malim znakovima u sekvenci za sažimanje. Sva mjesta će biti inicirana s posebnim znakom ili brojem koji će indicirati da se taj tuple ne pojavljuje u referenci. Sad prolazimo kroz svaki tuple sekvence za sažimanje i uspoređujemo ga sa svim tupleovima iz reference. Ako se tupleovi podudaraju zapiše se redni broj tuplea iz reference na mjesto tuplea iz sekvence za sažimanje u nizu, inače ostaje znak nepodudaranja. Sad ćemo prikazati popunjavanje nizova na način da ćemo proći tuple po tuple iz sekvence za sažimanje:\newline
+
+\begin{minipage}{0.5\textwidth}
+	\textbf{Početak\newline
+		Niz sekvence za sažimanje:\newline
+		{[-1, -1, -1]}\newline
+		Niz razlike: \newline 
+		{[]}
+		\newline
+		\rule{\textwidth}{0.5pt}
+		1. tuple\newline
+		Niz sekvence za sažimanje:\newline
+		{[-1, -1, -1]}\newline
+		Niz razlike: \newline 
+		{[[12,10]]}
+		\newline
+	}
+\end{minipage}
+\hspace{0.05\textwidth}
+\begin{minipage}{0.5\textwidth}
+	\textbf{2. tuple\newline
+	Niz sekvence za sažimanje:\newline
+	{[-1, 2, -1]}\newline
+	Niz razlike: \newline 
+	{[[12,10]]}
+	\newline
+	\rule{\textwidth}{0.5pt}
+	3. tuple\newline
+	Niz sekvence za sažimanje:\newline
+	{[-1, 2, 3]}\newline
+	Niz razlike: \newline 
+	{[[12,10]]}
+	\newline
+}
+\end{minipage}
+
 
 \section{Kodiranje podataka}
-Ovim procesom kodiraju se sve informacije. Identifikator sekvence i duljine redova kodiraju se RLE (run-length encoding) metodom, dok se posebni znakovi kodiraju statičnim entropijskim kodiranjem. Vrijednosti pozicije kodiraju se prediktivnim inkrementalnim kodiranjem tako da se pozicija sljedećeg entiteta predviđa na temelju vrijednosti pozicije i duljine trenutačnog entiteta. Sve kodirane informacije kodiraju se PPMD koderom koristeći alat 7-zip(https://www.7-zip.org/).
+Ovim procesom kodiraju se sve informacije. Identifikator sekvence i duljine redova kodiraju se RLE (run-length encoding) metodom \cite{hrcm}, dok se posebni znakovi kodiraju statičnim entropijskim kodiranjem \cite{hrcm}. Vrijednosti pozicije kodiraju se prediktivnim inkrementalnim kodiranjem \cite{hrcm} tako da se pozicija sljedećeg entiteta predviđa na temelju vrijednosti pozicije i duljine trenutačnog entiteta. Sve kodirane informacije kodiraju se PPMD koderom koristeći alat 7-zip \cite{7z}.
 
 \section{Dekompresija}
-Dekompresija obavlja se obrnutim postupkom od kompresije. Komprimirana datoteka dekomprimira se alatom 7-zip te RLE metodom, statičnim entropijskim kodiranjem i prediktivnim inkrementalnim kodiranjem. Sljedeće što je potrebno primijeniti je dekompresija dobivena procesom podudaranja. Kako bi se to ostvarilo, prva zapisana sekvenca dekodira se iščitavanjem podnizova u referentnom genomu koristeći informacije o pozicijama, duljinama i znakovima nepodudaranja. Sve ostale sekvence moraju se najprije dekomprimirati koristeći zapis rezultata podudaranja prve razine dobivenih za sve prethodeće sekvence. To se izvodi koristeći zapisane podatke o identifikatoru sekvence, pozicije i duljine podudarajućeg segmenta. Rezultat te dekompresije je rezultat podudaranja prve razine, koji se dekomprimira već opisanim postupkom. Naposlijetku, informacije o malim slovima, N znakovima i posebnim znakovima koriste se za sastavljanje originalnog zapisa sekvence.
+Dekompresija se obavlja obrnutim postupkom od kompresije. Komprimirana datoteka dekomprimira se alatom 7-zip te RLE metodom, statičnim entropijskim kodiranjem \cite{hrcm} i prediktivnim inkrementalnim kodiranjem \cite{hrcm}. Sljedeće što je potrebno primijeniti je dekompresija dobivena procesom podudaranja. Kako bi se to ostvarilo, prva zapisana sekvenca dekodira se iščitavanjem podnizova u referentnom genomu koristeći informacije o pozicijama, duljinama i znakovima nepodudaranja. Sve ostale sekvence moraju se najprije dekomprimirati koristeći zapis rezultata podudaranja prve razine dobivenih za sve prethodeće sekvence. To se izvodi koristeći zapisane podatke o identifikatoru sekvence, pozicije i duljine podudarajućeg segmenta. Rezultat te dekompresije je rezultat podudaranja prve razine, koji se dekomprimira već opisanim postupkom. Naposlijetku, informacije o malim slovima, N znakovima i posebnim znakovima koriste se za sastavljanje originalnog zapisa sekvence.
 
