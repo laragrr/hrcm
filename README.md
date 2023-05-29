@@ -1,3 +1,5 @@
+# HRCM Bioinformatics 1 project
+
 This is a project from the course of [Bioinformatics 1](https://www.fer.unizg.hr/predmet/bio1) in the Faculty of Electrical Engineering and Computing ([FER](www.fer.unizg.hr)).<br />
 The goal of this project is to implement the Hybrid Referential Compression Method based on the [original article](https://www.hindawi.com/journals/bmri/2019/3108950/). The repository for the original article can be found [here](https://github.com/haicy/HRCM). <br />
 Testing results of our implementation can be found in the [documentation file](https://github.com/laragrr/hrcm/main/documentation.pdf).
